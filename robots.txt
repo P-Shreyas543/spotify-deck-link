@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://p-shreyas543.github.io/spotify-deck-link/sitemap.xml

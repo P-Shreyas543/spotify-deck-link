@@ -5,40 +5,172 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy"
-      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
-<title>Spotify Deck</title>
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.shields.io; connect-src 'self' https://unpkg.com">
+<title>Spotify Deck: ESP32 Spotify Now Playing Touch Display (CrowPanel 2.4")</title>
+<meta name="description" content="Open-source ESP32 Spotify now playing display with album art, play/pause, skip and volume on a 2.4 inch touchscreen. Two-minute phone setup, over-the-air updates, one-click web installer. ESP-IDF + LVGL.">
+<meta name="keywords" content="ESP32 Spotify display, Spotify now playing ESP32, ESP32 Spotify controller, CrowPanel 2.4, LVGL Spotify, ESP-IDF Spotify, Spotify desk display, ILI9341 XPT2046">
+<link rel="canonical" href="https://p-shreyas543.github.io/spotify-deck-link/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Spotify Deck: ESP32 Spotify Now Playing Display">
+<meta property="og:description" content="Album art and playback controls for Spotify on a 2.4 inch ESP32 touchscreen. Open source, two-minute setup.">
+<meta property="og:url" content="https://p-shreyas543.github.io/spotify-deck-link/">
+<meta property="og:image" content="https://p-shreyas543.github.io/spotify-deck-link/images/deck.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "Spotify Deck",
+  "description": "ESP32 Spotify now playing touch display with album art and playback controls.",
+  "codeRepository": "https://github.com/P-Shreyas543/esp32-spotify-deck",
+  "programmingLanguage": "C",
+  "runtimePlatform": "ESP32 (ESP-IDF, LVGL)",
+  "license": "https://opensource.org/licenses/MIT",
+  "author": {"@type": "Person", "name": "Shreyas P", "url": "https://github.com/P-Shreyas543"}
+}
+</script>
 <style>
-  :root { --bg:#121212; --card:#1e1e1e; --text:#f2f2f2; --muted:#a0a0a0; --accent:#1db954; --err:#ff6b6b; }
+  :root { --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --muted:#a8a8a8; --accent:#1db954; --err:#ff6b6b; }
+  * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--text);
-         font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
-  main { max-width:420px; margin:0 auto; padding:48px 20px; text-align:center; }
-  h1 { font-size:22px; margin:0 0 8px; }
-  p { color:var(--muted); margin:0 0 24px; }
-  a.button { display:inline-block; padding:14px 28px; border-radius:24px; background:var(--accent);
-             color:#000; font-weight:700; text-decoration:none; }
-  .err { color:var(--err); }
+         font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  a { color:var(--accent); }
   [hidden] { display:none !important; }
+  main { max-width:880px; margin:0 auto; padding:0 16px 48px; }
+  header { text-align:center; padding:48px 0 24px; }
+  h1 { font-size:clamp(28px,5vw,42px); margin:0 0 8px; line-height:1.2; }
+  .tag { color:var(--muted); font-size:18px; margin:0 auto 24px; max-width:640px; }
+  .hero img { width:100%; max-width:560px; border-radius:16px; display:block; margin:0 auto; }
+  .hero figcaption { color:var(--muted); font-size:14px; margin-top:8px; }
+  .buttons { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:24px 0; }
+  .btn { display:inline-block; padding:12px 24px; border-radius:24px; font-weight:700; text-decoration:none; }
+  .btn.primary { background:var(--accent); color:#000; }
+  .btn.secondary { background:#2c2c2c; color:var(--text); }
+  section { margin-top:48px; }
+  h2 { font-size:24px; margin:0 0 16px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+  .card { background:var(--card); border-radius:12px; padding:18px; }
+  .card h3 { margin:0 0 6px; font-size:17px; }
+  .card p { margin:0; color:var(--muted); font-size:15px; }
+  ol li, ul li { margin-bottom:8px; }
+  .note { border-left:3px solid var(--accent); background:var(--card); padding:12px 16px; border-radius:6px; color:var(--muted); }
+  code { background:#262626; padding:2px 6px; border-radius:4px; font-size:14px; }
+  footer { margin-top:56px; color:var(--muted); font-size:14px; text-align:center; }
+  #bounce { max-width:420px; margin:0 auto; padding:64px 20px; text-align:center; }
+  #bounce .err { color:var(--err); }
+  esp-web-install-button button[slot] { cursor:pointer; }
 </style>
 </head>
 <body>
-<main>
-  <h1 id="title">Returning to your Spotify Deck…</h1>
-  <p id="text">One moment.</p>
-  <a class="button" id="go" href="#" hidden>Continue to your deck</a>
+
+<!-- Spotify login return: forward to the deck (only shown with ?code / ?error) -->
+<div id="bounce" hidden>
+  <h1 id="b-title" style="font-size:22px">Returning to your Spotify Deck...</h1>
+  <p id="b-text" style="color:var(--muted)">One moment.</p>
+  <a class="btn primary" id="b-go" href="#" hidden>Continue to your deck</a>
+</div>
+
+<main id="site">
+  <header>
+    <h1>Spotify Deck</h1>
+    <p class="tag">An ESP32 touchscreen that shows what Spotify is playing, with album art,
+      play/pause, skip and volume. Open source, set up in two minutes with your phone.</p>
+    <figure class="hero">
+      <img src="images/deck.jpg" alt="Spotify Deck: ESP32 CrowPanel 2.4 inch display showing album art, track title, artist and playback controls" width="550" height="420">
+      <figcaption>The real device playing "Beautiful Things".</figcaption>
+    </figure>
+    <div class="buttons">
+      <a class="btn primary" href="#install">Install on your board</a>
+      <a class="btn secondary" href="https://github.com/P-Shreyas543/esp32-spotify-deck">Source code on GitHub</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card"><h3>Now playing</h3><p>Album art, scrolling title, artists, album and a live progress bar. Podcasts too.</p></div>
+      <div class="card"><h3>Touch controls</h3><p>Previous, play/pause, next and volume with instant feedback (Spotify Premium).</p></div>
+      <div class="card"><h3>Two-minute setup</h3><p>Scan a QR code for Wi-Fi, scan another to log in to Spotify. No app, no laptop.</p></div>
+      <div class="card"><h3>Updates over Wi-Fi</h3><p>Install new firmware from a browser; it rolls back by itself if anything goes wrong.</p></div>
+      <div class="card"><h3>Every artist name</h3><p>Accented and Cyrillic names render properly: Beyoncé, Måneskin, Dvořák, Кино.</p></div>
+      <div class="card"><h3>Open and tested</h3><p>MIT licensed ESP-IDF + LVGL firmware with on-device unit tests and hardware-in-the-loop tests.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What you need</h2>
+    <ul>
+      <li><b>Elecrow CrowPanel 2.4" ESP32 HMI</b> (also sold as the "ESP32 Miner LCD 2.4", SKU DHM04624D): ESP32, 320x240 touchscreen, USB-C. No soldering.</li>
+      <li>A USB-C cable and a computer with Chrome or Edge (for the one-time install).</li>
+      <li>A phone, 2.4 GHz Wi-Fi, and a Spotify account (Premium for the controls).</li>
+    </ul>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <ol>
+      <li>Connect the board to this computer with USB.</li>
+      <li>Click the button and choose the board's serial port (CH340 / USB-SERIAL).</li>
+    </ol>
+    <div class="buttons">
+      <esp-web-install-button manifest="firmware/manifest.json">
+        <button slot="activate" class="btn primary" style="border:0;font:inherit;font-weight:700">Install Spotify Deck</button>
+        <span slot="unsupported" class="note">Your browser cannot reach USB devices: use Chrome or Edge on a computer.</span>
+        <span slot="not-allowed" class="note">The installer needs an https page (open this site from github.io).</span>
+      </esp-web-install-button>
+    </div>
+    <p class="note">The firmware on this page signs in to Spotify with the maintainer's developer app, which
+      Spotify limits to 5 accounts. If linking says your account is not allowed, build with your own
+      free Spotify app (5 minutes):
+      <a href="https://github.com/P-Shreyas543/esp32-spotify-deck#build-from-source">build from source</a>.
+      Installing erases the board.</p>
+  </section>
+
+  <section id="setup">
+    <h2>Set it up</h2>
+    <ol>
+      <li><b>Welcome:</b> tap <b>Start</b>.</li>
+      <li><b>Wi-Fi:</b> scan the QR code with your phone camera; pick your network on the page that opens.</li>
+      <li><b>Spotify:</b> with the phone back on your Wi-Fi, scan the next QR code, log in and tap <b>Agree</b>.</li>
+      <li>Play music on any device: the deck shows it.</li>
+    </ol>
+    <p>Later: the gear button opens Settings (Wi-Fi, Spotify, touch calibration, firmware update,
+      factory reset). Updates: <code>http://spotifydeck.local/update</code>.</p>
+  </section>
+
+  <section id="how">
+    <h2>How the Spotify login works</h2>
+    <p>Spotify only returns to <code>https://</code> addresses after login, and the deck is a plain-HTTP
+      device on your home network. So the login (OAuth with PKCE) is started by the deck, Spotify sends
+      your phone back to <em>this page</em>, and this page immediately forwards it to the deck, which
+      finishes the login. Nothing is stored here, and the one-time code is useless without a secret that
+      never leaves the deck. <a href="privacy.html">Privacy</a>.</p>
+  </section>
+
+  <footer>
+    <p><a href="https://github.com/P-Shreyas543/esp32-spotify-deck">GitHub</a> ·
+       <a href="https://github.com/P-Shreyas543/esp32-spotify-deck/releases">Releases</a> ·
+       <a href="privacy.html">Privacy</a> · MIT license</p>
+    <p>Spotify is a trademark of Spotify AB. This project is not affiliated with Spotify.</p>
+  </footer>
 </main>
+
 <script>
 /*
- * Spotify only redirects to https:// (or 127.0.0.1) after login, and the deck is a
- * plain-HTTP device on the home network. This page receives Spotify's redirect and
- * forwards the browser to the deck, which finishes the login itself.
- *
- * Nothing is stored or sent anywhere else. The code is single-use and useless
- * without the PKCE verifier that never leaves the deck. The deck's address travels in `state`
- * ("<private IPv4>_<nonce>") and only private addresses are accepted, so this page
- * cannot be used to redirect to other sites.
+ * Two jobs on one URL (it is the Redirect URI registered with Spotify):
+ *  - with ?code / ?error: forward the browser to the deck that started the login,
+ *  - otherwise: the project's landing page.
+ * The deck's address travels in `state` ("<private IPv4>_<nonce>"); only private
+ * addresses are accepted, so this page cannot redirect to other sites.
  */
 (function () {
   const params = new URLSearchParams(location.search);
+  if (!params.has("code") && !params.has("error")) {
+    return; // landing page
+  }
+  document.getElementById("site").hidden = true;
+  document.getElementById("bounce").hidden = false;
+
   const state = params.get("state") || "";
   const sep = state.indexOf("_");
   const ip = sep > 0 ? state.slice(0, sep) : "";
@@ -48,20 +180,14 @@
     if (!m) return false;
     const o = m.slice(1).map(Number);
     if (o.some((n) => n > 255)) return false;
-    return o[0] === 10 ||
-           (o[0] === 172 && o[1] >= 16 && o[1] <= 31) ||
-           (o[0] === 192 && o[1] === 168);
-  }
-
-  function fail(title, text) {
-    document.getElementById("title").textContent = title;
-    document.getElementById("title").className = "err";
-    document.getElementById("text").textContent = text;
+    return o[0] === 10 || (o[0] === 172 && o[1] >= 16 && o[1] <= 31) || (o[0] === 192 && o[1] === 168);
   }
 
   if (!isPrivateIPv4(ip)) {
-    fail("This link didn't come from a Spotify Deck",
-         "Start again from the QR code on the deck's screen.");
+    const t = document.getElementById("b-title");
+    t.textContent = "This link didn't come from a Spotify Deck";
+    t.className = "err";
+    document.getElementById("b-text").textContent = "Start again from the QR code on the deck's screen.";
     return;
   }
 
@@ -71,17 +197,17 @@
   }
   const target = "http://" + ip + "/spotify/callback?" + forward.toString();
 
-  // The button is there from the start: some browsers hold back an automatic jump
-  // from a website to a local-network address until the user taps. The code stays
-  // in this page's address so a reload works too (it is single-use and useless
-  // without the deck's PKCE verifier).
-  const go = document.getElementById("go");
+  // The button is visible from the start: some browsers hold back an automatic jump
+  // from a website to a local-network address until the user taps. The code stays in
+  // the address so a reload works (single-use, useless without the deck's verifier).
+  const go = document.getElementById("b-go");
   go.href = target;
   go.hidden = false;
-  document.getElementById("text").textContent =
+  document.getElementById("b-text").textContent =
     "If the deck's page doesn't open by itself, tap the button (this phone must be on the same Wi-Fi as the deck).";
   setTimeout(function () { location.href = target; }, 300);
 })();
 </script>
+<script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
 </body>
 </html>

@@ -1,0 +1,11 @@
+{
+  "name": "Spotify Deck",
+  "version": "0.6.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [{ "path": "spotify_deck-full.bin", "offset": 0 }]
+    }
+  ]
+}

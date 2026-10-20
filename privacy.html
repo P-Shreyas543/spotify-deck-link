@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy - Spotify Deck</title>
+<meta name="description" content="What the Spotify Deck and this website do with your data.">
+<link rel="canonical" href="https://p-shreyas543.github.io/spotify-deck-link/privacy.html">
+<style>
+  body { margin:0; background:#121212; color:#f2f2f2; font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:40px 16px; }
+  a { color:#1db954; } h1 { font-size:28px; } h2 { font-size:20px; margin-top:28px; }
+  p, li { color:#d0d0d0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy</h1>
+  <p>Short version: your data stays on your deck. Nobody runs a server for this project.</p>
+
+  <h2>This website</h2>
+  <ul>
+    <li>A static page on GitHub Pages. It sets no cookies, has no analytics and loads no trackers.</li>
+    <li>When Spotify sends you back after login, this page reads the one-time login code from the
+      address and forwards your browser to your deck on your home network. It does not store or send
+      the code anywhere else.</li>
+    <li>GitHub may keep standard server logs (see GitHub's privacy statement).</li>
+  </ul>
+
+  <h2>The deck</h2>
+  <ul>
+    <li>Stores your Wi-Fi network name and password, your Spotify login token and your Spotify display
+      name in its own flash memory, and nowhere else.</li>
+    <li>Talks only to Spotify (api.spotify.com, accounts.spotify.com, the Spotify image servers) over
+      HTTPS, to show what is playing and send your playback commands.</li>
+    <li>Uses the Spotify permissions <em>read currently playing</em>, <em>read playback state</em> and
+      <em>modify playback state</em>. It does not read your playlists, library or listening history.</li>
+    <li>Factory reset (Settings, or hold BOOT for 10 seconds) erases the Wi-Fi and Spotify data.
+      You can also revoke access any time at
+      <a href="https://www.spotify.com/account/apps/">spotify.com/account/apps</a>.</li>
+  </ul>
+
+  <h2>Contact</h2>
+  <p>Questions or problems: open an issue at
+    <a href="https://github.com/P-Shreyas543/esp32-spotify-deck/issues">github.com/P-Shreyas543/esp32-spotify-deck</a>.</p>
+  <p><a href="./">Back to Spotify Deck</a></p>
+</main>
+</body>
+</html>
