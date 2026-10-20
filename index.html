@@ -32,8 +32,8 @@
  * plain-HTTP device on the home network. This page receives Spotify's redirect and
  * forwards the browser to the deck, which finishes the login itself.
  *
- * Nothing is stored or sent anywhere else. The code is useless without the PKCE
- * verifier that never leaves the deck. The deck's address travels in `state`
+ * Nothing is stored or sent anywhere else. The code is single-use and useless
+ * without the PKCE verifier that never leaves the deck. The deck's address travels in `state`
  * ("<private IPv4>_<nonce>") and only private addresses are accepted, so this page
  * cannot be used to redirect to other sites.
  */
@@ -71,16 +71,16 @@
   }
   const target = "http://" + ip + "/spotify/callback?" + forward.toString();
 
-  // Keep the code out of the browser history, then hand over to the deck
-  history.replaceState(null, "", location.pathname);
+  // The button is there from the start: some browsers hold back an automatic jump
+  // from a website to a local-network address until the user taps. The code stays
+  // in this page's address so a reload works too (it is single-use and useless
+  // without the deck's PKCE verifier).
   const go = document.getElementById("go");
   go.href = target;
-  setTimeout(function () {
-    document.getElementById("text").textContent =
-      "If nothing happens, make sure this phone is on the same Wi-Fi as the deck, then tap:";
-    go.hidden = false;
-  }, 2500);
-  location.replace(target);
+  go.hidden = false;
+  document.getElementById("text").textContent =
+    "If the deck's page doesn't open by itself, tap the button (this phone must be on the same Wi-Fi as the deck).";
+  setTimeout(function () { location.href = target; }, 300);
 })();
 </script>
 </body>
